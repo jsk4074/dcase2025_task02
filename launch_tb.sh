@@ -1,0 +1,1 @@
+tensorboard --logdir ./runs --reload_interval=5 --reload_multifile True --host=0.0.0.0 
