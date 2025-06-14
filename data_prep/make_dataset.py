@@ -95,6 +95,13 @@ class CustomDataset(Dataset):
             self.dataset_path = sorted(glob(dataset_root_path))
         elif mode == "test": 
             self.dataset_path = sorted(glob(dataset_root_path.replace("train", "test")))
+        elif mode == "eval": 
+            self.dataset_path = sorted(glob(dataset_root_path.replace("train", "test")))
+            self.dataset_path = sorted(glob(self.dataset_path.replace("add", "eval_2025")))
+
+            print(self.dataset_path)
+            print(self.dataset_path)
+            print(self.dataset_path)
         else:
             raise ValueError(f"Unknown mode: {mode}. Choose from 'train', 'test', or 'eval'.")
         
@@ -109,21 +116,8 @@ class CustomDataset(Dataset):
                 crop_sec=3,
             )
 
-            # self.dataset_stft = stft
-            # self.dataset_labes = labels
-
             self.dataset_stft += [stft_data]
             self.dataset_labes += [labels]
-        
-        # Augmentation
-        # self.freq_mask = FrequencyMasking(freq_mask_param=15)
-        # self.time_mask = TimeMasking(time_mask_param=25)
-        # self.random_erase = RandomErasing(
-        #     p=0.5, 
-        #     scale=(0.01,0.1), 
-        #     ratio=(0.3,3.3), 
-        #     value='random'
-        # )
 
     def __len__(self): 
         return len(self.dataset_stft)
@@ -142,25 +136,13 @@ class CustomDataset(Dataset):
 
         # Apply augmentation only for the 'train' mode
         if self.mode == "train":
-            # stft_data_noise = apply_spectral_anomaly(
-            #     stft_data, 
-            #     # anomaly_strength = randint(1, 2) * 0.1, 
-            #     anomaly_strength = 0.1, 
-            #     input_size=self.resize_shape, 
-            #     device=self.device
-            # )
-            # if torch.rand(1) < 0.5:
-            #     stft_data_noise = self.freq_mask(stft_data_noise)
-            # if torch.rand(1) < 0.5:
-            #     stft_data_noise = self.time_mask(stft_data_noise)
-            # # Random erasing on up to 10% of the area
-            # stft_data_noise = self.random_erase(stft_data_noise)
-
             return stft_data, stft_data, label
-            # return stft_data, stft_data_noise, label
         
         elif self.mode == "test":
             return stft_data, label
+        
+        elif self.mode == "eval":
+            return stft_data
         
         else: 
             raise ValueError("Invalid mode. Choose from 'train' or 'test'.")

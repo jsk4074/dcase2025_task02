@@ -20,24 +20,33 @@ torch.backends.cudnn.benchmark = False
 
 # Custom files 
 from architecture.encoder import encoder_model
-from architecture.conv_decoder import conv_decoder
 from architecture.decoder import decoder
 from architecture.fcn import fcn
 
 # Train functions 
-from train.backbone import model_fit_encoder
-from train.ascent import model_fit_anomaly_generator
-from train.fcn import model_fit_discriminator
+from evaluation.backbone import model_fit_encoder
+from evaluation.ascent import model_fit_anomaly_generator
+from evaluation.fcn import model_fit_discriminator
 
 # Loss functions 
 from usefulthings.ssim_loss import SSIMLoss
 
 domain = ['source', 'target'] 
-class_names = ['ToyTrain', 'gearbox', 'ToyCar', 'bearing', 'valve', 'fan', 'slider']
+class_names = [
+    'AutoTrash',
+    'BandSealer',
+    'CoffeeGrinder',
+    'HomeCamera',
+    'Polisher',
+    'ScrewFeeder',
+    'ToyPet ToyRCCar',
+]
 
 def main(config = None): 
+    eval_class_name = class_names[0]
+
     # Logging
-    log_dir = "./runs/baseline_ToyCar_100epoch_resnet50"
+    log_dir = "./runs/eval_" + eval_class_name + "_100epoch_resnet50"
     wandb.init(
         project="dcase_2025_t02_tb",
         dir = log_dir,  # Optional: makes log scanning easier
@@ -45,40 +54,33 @@ def main(config = None):
     )
     writer = SummaryWriter(log_dir = log_dir) 
 
-    dataset_path = "../data/unziped/dev/" + class_names[3] + "/train/*" # DCASE Original
+    dataset_path = "../data/unziped/add/" + eval_class_name + "/train/*" # DCASE Original
     print(dataset_path) 
     device = torch.device("cuda") 
 
     ######################### PARAMETER #########################
-
-    config = wandb.config
     # General finetuning parameters 
     dataset_path = dataset_path
-    epoch = 300
+    epoch = 2
     batch_size = 64
-    lr = config.lr
+    lr = 1e-3
 
     # Model input wise
     input_size = 256
     # ae_channel_size = [32, 64, 128, 256]
-    ae_channel_size = config.ae_channel_size
-    latent_dim = 1024
-    start_feature_size = 8
+    ae_channel_size = [64, 128, 256, 512]
 
     # Loss functions
     descent_generator_criterion = SSIMLoss()
     ascent_generator_criterion = SSIMLoss()
 
-    ##############################################################
+    #############################################################
 
     model_encoder = encoder_model(
-        model_name="efficientnet_b0",
-        # model_name="wide_resnet50",
-        
+        # model_name="efficientnet_b0",
         # model_name="vit_base_patch16_224",
-
         # model_name="resnet50",
-        # model_name="resnet18",
+        model_name="resnet18",
         input_size=256,
         in_chans=1,          
         embedding_dim=1024
@@ -89,14 +91,9 @@ def main(config = None):
         ae_channel_size = ae_channel_size,
     ).to(device)
 
-    # model_ascent_decoder = decoder(
-    #     input_size = input_size, 
-    #     ae_channel_size = ae_channel_size,
-    # ).to(device)
-
-    model_ascent_decoder = conv_decoder(
-        latent_dim, 
-        start_feature_size,
+    model_ascent_decoder = decoder(
+        input_size = input_size, 
+        ae_channel_size = ae_channel_size,
     ).to(device)
 
     model_discriminator = fcn().to(device)
@@ -159,33 +156,7 @@ def main(config = None):
 
 if __name__ == "__main__": 
     # mp.set_start_method('spawn', force=True)
-    sweep_config = {
-        'method': 'grid'
-    }
-
-    batch_size = 64
-    lr = 1e-3
-    # ae_channel_size = [32, 64, 128, 256]
-    ae_channel_size = [64, 128, 256, 512]
-
-    parameters_dict = {
-        'lr': {
-            'values': [1e-2, 1e-3, 1e-4]
-        },
-        'ae_channel_size': {
-            'values': [
-                [16, 32, 64, 128], 
-                [32, 64, 128, 256], 
-                [64, 128, 256, 512], 
-                [128, 256, 512, 1024], 
-            ]
-        },
-    }
-
-    sweep_config['parameters'] = parameters_dict
-    sweep_id = wandb.sweep(sweep_config, project="dcase_2025_t02_tb")
-
-    wandb.agent(sweep_id, main, count=50)    
+    main()
     
 
 

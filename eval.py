@@ -33,11 +33,22 @@ from train.fcn import model_fit_discriminator
 from usefulthings.ssim_loss import SSIMLoss
 
 domain = ['source', 'target'] 
-class_names = ['ToyTrain', 'gearbox', 'ToyCar', 'bearing', 'valve', 'fan', 'slider']
+# class_names = ['ToyTrain', 'gearbox', 'ToyCar', 'bearing', 'valve', 'fan', 'slider']
+class_names = [
+    'AutoTrash',
+    'BandSealer',
+    'CoffeeGrinder',
+    'HomeCamera',
+    'Polisher',
+    'ScrewFeeder',
+    'ToyPet ToyRCCar',
+]
 
 def main(config = None): 
+    eval_class_name = class_names[0]
+
     # Logging
-    log_dir = "./runs/baseline_ToyCar_100epoch_resnet50"
+    log_dir = "./runs/eval_" + eval_class_name + "_100epoch_resnet50"
     wandb.init(
         project="dcase_2025_t02_tb",
         dir = log_dir,  # Optional: makes log scanning easier
@@ -45,7 +56,7 @@ def main(config = None):
     )
     writer = SummaryWriter(log_dir = log_dir) 
 
-    dataset_path = "../data/unziped/dev/" + class_names[3] + "/train/*" # DCASE Original
+    dataset_path = "../data/unziped/add/" + eval_class_name + "/train/*" # DCASE Original
     print(dataset_path) 
     device = torch.device("cuda") 
 

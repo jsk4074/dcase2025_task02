@@ -13,7 +13,7 @@ def mask2anomaly(anomaly_mask, normal_audio, device = "cuda"):
 
     perlin_noise = rand_perlin_2d_octaves((256, 256), (8, 8), 5, device=device)
     perlin_noise = torch.abs(perlin_noise) / torch.max(perlin_noise)
-    perlin_noise = perlin_noise * 0.1
+    perlin_noise = perlin_noise * 0.2
 
     mask_anomaly = binary_img * perlin_noise
 
@@ -21,10 +21,4 @@ def mask2anomaly(anomaly_mask, normal_audio, device = "cuda"):
     synth_anomaly = normal_audio + mask_anomaly
 
     return synth_anomaly / torch.max(synth_anomaly), binary_img
-
-
-
-
-
-
 
